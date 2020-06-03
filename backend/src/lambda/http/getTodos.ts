@@ -5,8 +5,10 @@ import { getAllTodos } from '../businessLogic/todos';
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   console.log('Processing event: ', event)
-
-  const items = await getAllTodos();
+  const authorization = event.headers.Authorization;
+  const split = authorization.split(' ');
+  const jwtToken = split[1];
+  const items = await getAllTodos(jwtToken);
   return {
     statusCode: 200,
     headers: {

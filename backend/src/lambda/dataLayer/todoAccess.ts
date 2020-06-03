@@ -4,6 +4,7 @@ import { createLogger } from '../../utils/logger';
 
 import { TodoItem } from '../../models/TodoItem';
 const logger = createLogger('todoAccess'); 
+const userIdIndexName = process.env.USER_ID_INDEX;
 
 export class TodoAccess {
 
@@ -12,11 +13,16 @@ export class TodoAccess {
     private readonly todosTable = process.env.TODOS_TABLE) {
   }
 
-  async getAllTodos(): Promise<TodoItem[]> {
+  async getUserAllTodos(userId: string): Promise<TodoItem[]> {
     console.log('Getting all todos');
 
-    const result = await this.docClient.scan({
-      TableName: this.todosTable
+    const result = await this.docClient.query({
+      TableName: this.todosTable,
+      IndexName: userIdIndexName,
+      KeyConditionExpression: 'userId = :userId',
+      ExpressionAttributeValues: {
+          ':userId': userId
+      }
     }).promise();
 
     const items = result.Items;
@@ -40,7 +46,8 @@ export class TodoAccess {
     var params = {
       TableName:this.todosTable,
       Key:{
-          "todoId": todoItem.todoId
+          "todoId": todoItem.todoId,
+          "userId": todoItem.userId
       },
       UpdateExpression: "set attachmentUrl = :u",
       ExpressionAttributeValues:{
@@ -57,14 +64,16 @@ export class TodoAccess {
     logger.info('getTodoItem called.',{
       todoId
     });
-    const result = await this.docClient.get({
+    const result = await this.docClient.query({
       TableName: this.todosTable,
-      Key: {
-        todoId: todoId
-      }
+      KeyConditionExpression: 'todoId = :todoId',
+      ExpressionAttributeValues: {
+        ':todoId': todoId
+      },
+      ScanIndexForward: false
     }).promise();
-    if(result.Item){
-      return Promise.resolve(result.Item as TodoItem);
+    if(result.Items && result.Items.length > 0){
+      return Promise.resolve(result.Items[0] as TodoItem);
     }
     else{
       return Promise.resolve(undefined);
