@@ -3,6 +3,7 @@ import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { createLogger } from '../../utils/logger';
 
 import { TodoItem } from '../../models/TodoItem';
+import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest';
 const logger = createLogger('todoAccess'); 
 const userIdIndexName = process.env.USER_ID_INDEX;
 
@@ -78,6 +79,53 @@ export class TodoAccess {
     else{
       return Promise.resolve(undefined);
     }
+  }
+
+  async getUserTodoItem(todoId: string,userId: string): Promise<TodoItem> {
+    logger.info('getUserTodoItem called.',{
+      todoId,
+      userId
+    });
+    const result = await this.docClient.query({
+      TableName: this.todosTable,
+      KeyConditionExpression: 'todoId = :todoId and userId = :userId',
+      ExpressionAttributeValues: {
+        ':todoId': todoId,
+        ':userId': userId
+      },
+      ScanIndexForward: false
+    }).promise();
+    if(result.Items && result.Items.length > 0){
+      return Promise.resolve(result.Items[0] as TodoItem);
+    }
+    else{
+      return Promise.resolve(undefined);
+    }
+  }
+
+  async updateTodo(updateTodoRequest: UpdateTodoRequest,userId: string,todoId: string) : Promise<void> {
+    logger.info("updateTodo is called.",{updateTodoRequest});
+  
+    const result = await this.docClient.update({
+      TableName:this.todosTable,
+      Key:{
+          "todoId": todoId,
+          "userId": userId
+      },
+      UpdateExpression: "set #todoName = :todoName, #dueDate = :dueDate, #done = :done",
+      ExpressionAttributeNames: {
+          '#todoName': 'name',
+          '#dueDate': 'dueDate',
+          '#done': 'done'
+      },
+      ExpressionAttributeValues: {
+          ":todoName": updateTodoRequest.name,
+          ":dueDate": updateTodoRequest.dueDate,
+          ":done": updateTodoRequest.done
+      },
+    }).promise();
+
+    logger.info("updateTodo is completed.",{result});
   }
 }
 

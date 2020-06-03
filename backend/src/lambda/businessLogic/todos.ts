@@ -3,23 +3,21 @@ import { TodoItem } from '../../models/TodoItem';
 import { TodoAccess } from '../dataLayer/todoAccess';
 import { CreateTodoRequest } from '../../requests/CreateTodoRequest';
 import { createLogger } from '../../utils/logger';
-import { parseUserId } from '../../auth/utils';
+import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest';
 
 const todoAccess = new TodoAccess();
 const logger = createLogger('todos'); 
 
-export async function getAllTodos(jwtPayload: string): Promise<TodoItem[]> {
-  const userId = parseUserId(jwtPayload);
+export async function getAllTodos(userId: string): Promise<TodoItem[]> {
   return todoAccess.getUserAllTodos(userId);
 }
 
-export async function createTodo(todoItem: CreateTodoRequest, jwtPayload: string ): Promise<TodoItem> {
+export async function createTodo(todoItem: CreateTodoRequest, userId: string ): Promise<TodoItem> {
     logger.info('createTodo called.',{
       todoItem,
-      jwtPayload
+      userId
     });
     const todoId = uuid.v4();
-    const userId = parseUserId(jwtPayload);
     const createDate = new Date().toISOString();
     return await todoAccess.createTodo({
         todoId: todoId,
@@ -31,11 +29,28 @@ export async function createTodo(todoItem: CreateTodoRequest, jwtPayload: string
       });
 }
 
+export async function updateTodo(updateTodoRequest: UpdateTodoRequest, userId: string,todoId: string ): Promise<void> {
+  logger.info('updateTodo called.',{
+    updateTodoRequest,
+    userId,
+    todoId
+  });
+  return await todoAccess.updateTodo(updateTodoRequest,userId,todoId);
+}
+
 export async function getTodoItem(todoId: string): Promise<TodoItem> {
   logger.info('getTodoItem called.',{
     todoId
   });
-  return todoAccess.getTodoItem(todoId);
+  return await todoAccess.getTodoItem(todoId);
+}
+
+export async function getUserTodoItem(userId:string,todoId:string): Promise<TodoItem>{
+  logger.info("getUserTodoItem called.",{
+    userId,
+    todoId
+  });
+  return await todoAccess.getUserTodoItem(todoId,userId);
 }
 
 export async function updateTodoAttachmentUrl(todoItem: TodoItem){
