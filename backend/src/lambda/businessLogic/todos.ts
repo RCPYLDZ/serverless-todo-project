@@ -1,11 +1,13 @@
 import * as uuid from 'uuid';
 import { TodoItem } from '../../models/TodoItem';
 import { TodoAccess } from '../dataLayer/todoAccess';
+import { S3Acceess } from '../resourceLayer/s3Access';
 import { CreateTodoRequest } from '../../requests/CreateTodoRequest';
 import { createLogger } from '../../utils/logger';
 import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest';
 
 const todoAccess = new TodoAccess();
+const s3Access = new S3Acceess();
 const logger = createLogger('todos'); 
 
 export async function getAllTodos(userId: string): Promise<TodoItem[]> {
@@ -58,4 +60,19 @@ export async function updateTodoAttachmentUrl(todoItem: TodoItem){
     todoItem
   });
   return await todoAccess.updateTodoAttachmentUrl(todoItem);
+}
+
+export async function deleteTodo(userId:string, todoId: string){
+  logger.info("deleteTodo is called. ",{
+    userId,todoId
+  });
+  return await todoAccess.deleteTodo(userId,todoId);
+}
+
+export async function getUploadAttachmentUrl(todoId:string): Promise<string>{
+  return await s3Access.getUploadAttachmentUrl(todoId);
+}
+
+export async function deleteTodoAttachment(todoId:string){
+  return await s3Access.deleteTodoAttachment(todoId);
 }

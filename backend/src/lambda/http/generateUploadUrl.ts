@@ -1,18 +1,13 @@
 import 'source-map-support/register';
 
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda';
-import * as AWS  from 'aws-sdk';
 import { createLogger } from '../../utils/logger';
-import { getTodoItem } from '../businessLogic/todos';
+import { getTodoItem, getUploadAttachmentUrl } from '../businessLogic/todos';
 
-const s3 = new AWS.S3({
-  signatureVersion: 'v4'
-});
 
 const logger = createLogger('generateUploadUrl');
 
-const attachmentBucketName = process.env.ATTACHMENTS_S3_BUCKET;
-const urlExpiration = process.env.SIGNED_URL_EXPIRATION;
+
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const todoId = event.pathParameters.todoId;
@@ -28,11 +23,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
       })
     };
   }else{
-    const uploadUrl =  s3.getSignedUrl('putObject',{
-      Bucket: attachmentBucketName,
-      Key: todoId,
-      Expires: urlExpiration
-    });
+    const uploadUrl =  await getUploadAttachmentUrl(todoId);
     return {
       statusCode: 200,
       headers: {

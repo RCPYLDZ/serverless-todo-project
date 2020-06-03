@@ -127,6 +127,19 @@ export class TodoAccess {
 
     logger.info("updateTodo is completed.",{result});
   }
+  async deleteTodo(userId:string,todoId: string): Promise<void> {
+    logger.info("deleteTodo is called.",{
+      userId,
+      todoId
+    });
+    await this.docClient.delete({
+      TableName: this.todosTable,
+      Key: {
+        "todoId": todoId,
+        "userId": userId
+      }
+    }).promise();
+  }
 }
 
 function createDynamoDBClient() {
