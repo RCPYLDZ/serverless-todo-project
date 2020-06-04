@@ -35,7 +35,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Credentials': true
       },
-      body: "Updated successfully"
+      body: ""
     };
   }catch(e){
     logger.error("An error occured. ",{
